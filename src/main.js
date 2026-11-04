@@ -2,11 +2,10 @@
 // LÓGICA PRINCIPAL (SRC/MAIN.JS) - BUSCADOR Y FILTROS DINÁMICOS
 // ============================================================================
 
-// 1. Configuración de cliente Supabase
-const SUPABASE_URL = 'https://ymnaukmdoapukiuelfux.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_6o8MwAGFEUKH5udXfYWULQ_drFWrtAH';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+import { db } from './supabase.js';
+
 const TABLA_NOMBRE = 'instituciones_recursos';
+let datosCompletos = [];
 
 // Selección de elementos del DOM
 const searchInput = document.getElementById('searchInput');
@@ -22,12 +21,13 @@ const openAdminBtn = document.getElementById('openAdminBtn');
 const closeAdminBtn = document.getElementById('closeAdminBtn');
 const adminModal = document.getElementById('adminModal');
 
-let datosCompletos = [];
-
-// 2. Cargar datos iniciales desde Supabase
+// 1. Cargar datos iniciales desde Supabase
 async function cargarDatos() {
     try {
+        if (!resultsCount || !cardsContainer) return;
+
         resultsCount.textContent = 'Cargando recursos de la base de datos...';
+
         const { data, error } = await db.from(TABLA_NOMBRE).select('*');
         
         if (error) throw error;
@@ -37,17 +37,22 @@ async function cargarDatos() {
         filtrarYRenderizar();
     } catch (err) {
         console.error('Error al consultar Supabase:', err);
-        resultsCount.textContent = 'Error al cargar los datos desde el servidor.';
-        cardsContainer.innerHTML = `<p style="color: red; text-align: center; grid-column: 1 / -1;">Ocurrió un error: ${err.message}</p>`;
+        if (resultsCount) {
+            resultsCount.textContent = 'Error al cargar los datos desde el servidor.';
+        }
+        if (cardsContainer) {
+            cardsContainer.innerHTML = `<p style="color: #dc2626; text-align: center; grid-column: 1 / -1; font-weight: 500; padding: 2rem;">⚠️ Ocurrió un error: ${err.message}</p>`;
+        }
     }
 }
 
-// 3. Poblar selectores de forma dinámica según datos reales
+// 2. Poblar selectores de forma dinámica según datos reales
 function poblarSelects(data) {
+    if (!selectSeccion || !selectTipo || !selectGestion) return;
+
     const secciones = [...new Set(data.map(item => item.seccion).filter(Boolean))].sort();
     const tipos = [...new Set(data.map(item => item.tipo_institucion).filter(Boolean))].sort();
     
-    // Filtro de seguridad para descartar valores no válidos en gestión
     const gestiones = [...new Set(data.map(item => item.gestion).filter(Boolean))]
         .filter(g => !g.includes('-') && !/\d/.test(g))
         .sort();
@@ -62,12 +67,12 @@ function poblarSelects(data) {
         gestiones.map(g => `<option value="${g}">${g}</option>`).join('');
 }
 
-// 4. Aplicar filtros combinados y búsqueda general
+// 3. Aplicar filtros combinados y búsqueda general
 function filtrarYRenderizar() {
-    const texto = searchInput.value.toLowerCase().trim();
-    const seccionSel = selectSeccion.value;
-    const tipoSel = selectTipo.value;
-    const gestionSel = selectGestion.value;
+    const texto = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const seccionSel = selectSeccion ? selectSeccion.value : '';
+    const tipoSel = selectTipo ? selectTipo.value : '';
+    const gestionSel = selectGestion ? selectGestion.value : '';
 
     const filtrados = datosCompletos.filter(item => {
         const coincideTexto = !texto ||
@@ -86,8 +91,10 @@ function filtrarYRenderizar() {
     renderizarResultados(filtrados);
 }
 
-// 5. Renderizar tarjetas en el contenedor
+// 4. Renderizar tarjetas en el contenedor
 function renderizarResultados(lista) {
+    if (!cardsContainer || !resultsCount) return;
+
     cardsContainer.innerHTML = '';
     resultsCount.textContent = `Se encontraron ${lista.length} de ${datosCompletos.length} recursos disponibles.`;
 
@@ -121,25 +128,27 @@ function renderizarResultados(lista) {
     });
 }
 
-// Event Listeners para Filtros y Búsqueda
-searchInput.addEventListener('input', filtrarYRenderizar);
-selectSeccion.addEventListener('change', filtrarYRenderizar);
-selectTipo.addEventListener('change', filtrarYRenderizar);
-selectGestion.addEventListener('change', filtrarYRenderizar);
+// Event Listeners
+if (searchInput) searchInput.addEventListener('input', filtrarYRenderizar);
+if (selectSeccion) selectSeccion.addEventListener('change', filtrarYRenderizar);
+if (selectTipo) selectTipo.addEventListener('change', filtrarYRenderizar);
+if (selectGestion) selectGestion.addEventListener('change', filtrarYRenderizar);
 
-btnClearFilters.addEventListener('click', () => {
-    searchInput.value = '';
-    selectSeccion.value = '';
-    selectTipo.value = '';
-    selectGestion.value = '';
-    filtrarYRenderizar();
-});
+if (btnClearFilters) {
+    btnClearFilters.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        if (selectSeccion) selectSeccion.value = '';
+        if (selectTipo) selectTipo.value = '';
+        if (selectGestion) selectGestion.value = '';
+        filtrarYRenderizar();
+    });
+}
 
-// Eventos para la Ventana Modal de Administración
+// Modal Admin
 if (openAdminBtn && closeAdminBtn && adminModal) {
     openAdminBtn.addEventListener('click', () => adminModal.style.display = 'flex');
     closeAdminBtn.addEventListener('click', () => adminModal.style.display = 'none');
 }
 
-// Iniciar la carga de datos al abrir la página
+// Iniciar aplicación
 cargarDatos();

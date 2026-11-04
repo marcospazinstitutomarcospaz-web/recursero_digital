@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guía de Recursos Socio-Comunitarios - Marcos Paz 2026</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Librería oficial de Supabase -->
+    <!-- Librería oficial de Supabase cargada globalmente -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -116,4 +116,42 @@
                 <form id="adminLoginForm">
                     <div style="margin-bottom: 1rem;">
                         <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Usuario:</label>
-                        <input type="text" id="adminUser" required style="width: 100%; padding: 0.5rem; border: 1px solid
+                        <input type="text" id="adminUser" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Contraseña:</label>
+                        <input type="password" id="adminPass" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                    <p id="adminLoginError" style="color: red; display: none; font-size: 0.85rem; margin-bottom: 1rem;">Usuario o contraseña incorrectos.</p>
+                    <button type="submit" style="background: #047857; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%;">Ingresar</button>
+                </form>
+            </div>
+
+            <!-- Panel Admin -->
+            <div id="adminPanelSection" style="display: none;">
+                <h3 style="margin-bottom: 1rem; color: #047857;">Editar Textos Principales</h3>
+                <form id="adminEditForm">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Título Principal:</label>
+                        <input type="text" id="editTitle" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Subtítulo:</label>
+                        <textarea id="editSubtitle" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;" rows="3"></textarea>
+                    </div>
+                    <button type="submit" style="background: #047857; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%; margin-bottom: 0.5rem;">Guardar Cambios</button>
+                    <button type="button" id="adminLogoutBtn" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%;">Cerrar Sesión</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Centro de Orientación Familiar (COF) Marcos Paz — Año 2026[cite: 1]</p>
+        <p style="font-size: 0.8rem; margin-top: 0.25rem;">Plataforma interactiva para la comunidad, equipos docentes y Jefatura Distrital.</p>
+    </footer>
+
+    <!-- Cargamos el script principal como módulo para aislar la lógica -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
