@@ -1,13 +1,14 @@
 // ============================================================================
-// LÓGICA PRINCIPAL (SRC/MAIN.JS) - BUSCADOR, FILTROS Y CRUD DE BASE DE DATOS
+// LÓGICA PRINCIPAL (SRC/MAIN.JS) - BUSCADOR, FILTROS Y CONTROL DE ROLES DE UI
 // ============================================================================
 
 import { db } from './supabase.js';
-import { verificarEsAdmin, iniciarSesionAdmin, cerrarSesionAdmin } from './auth.js';
+import { verificarEsAdmin, obtenerSesionActual, iniciarSesionAdmin, cerrarSesionAdmin } from './auth.js';
 
 const TABLA_NOMBRE = 'instituciones_recursos';
 let datosCompletos = [];
 let esUsuarioAdmin = false;
+let usuarioSesion = null;
 
 // Elementos del DOM
 const searchInput = document.getElementById('searchInput');
@@ -42,12 +43,14 @@ const resResponsable = document.getElementById('resResponsable');
 const resDetalles = document.getElementById('resDetalles');
 const btnCancelEdit = document.getElementById('btnCancelEdit');
 
-// 1. Cargar datos desde Supabase
+// 1. Cargar datos desde Supabase y verificar el tipo de usuario
 async function cargarDatos() {
     try {
         if (!resultsCount || !cardsContainer) return;
 
         resultsCount.textContent = 'Cargando recursos de la base de datos...';
+        
+        usuarioSesion = await obtenerSesionActual();
         esUsuarioAdmin = await verificarEsAdmin();
 
         const { data, error } = await db.from(TABLA_NOMBRE).select('*');
@@ -111,7 +114,7 @@ function filtrarYRenderizar() {
     renderizarResultados(filtrados);
 }
 
-// 4. Renderizar tarjetas (con acciones de Admin en la base de datos)
+// 4. Renderizar tarjetas (Solo agrega botones de Editar/Eliminar si es ADMIN)
 function renderizarResultados(lista) {
     if (!cardsContainer || !resultsCount) return;
 
@@ -128,7 +131,7 @@ function renderizarResultados(lista) {
         card.className = 'resource-card';
         card.style.cssText = 'background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;';
 
-        // Si el usuario inició sesión como Admin, se añaden los botones directos de Editar y Eliminar
+        // Los botones de modificación SOLO se crean si la propiedad esUsuarioAdmin es TRUE
         const adminActions = esUsuarioAdmin ? `
             <div style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid #f1f5f9; display: flex; gap: 0.5rem; justify-content: flex-end;">
                 <button class="btn-edit-item" data-id="${item.id}" style="background: #2563eb; color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 600;">✏️ Editar</button>
@@ -156,7 +159,6 @@ function renderizarResultados(lista) {
         cardsContainer.appendChild(card);
     });
 
-    // Eventos de Editar y Eliminar en cada tarjeta
     if (esUsuarioAdmin) {
         document.querySelectorAll('.btn-edit-item').forEach(btn => {
             btn.addEventListener('click', () => prepararEdicion(btn.dataset.id));
@@ -167,12 +169,13 @@ function renderizarResultados(lista) {
     }
 }
 
-// 5. Guardar (Insert / Update) en Supabase
+// 5. Guardar (Solo Administradores)
 if (resourceForm) {
     resourceForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const id = resId.value;
+        if (!esUsuarioAdmin) return alert('No tienes permisos de administración.');
 
+        const id = resId.value;
         const payload = {
             nombre: resNombre.value.trim(),
             seccion: resSeccion.value.trim(),
@@ -186,12 +189,10 @@ if (resourceForm) {
 
         try {
             if (id) {
-                // UPDATE
                 const { error } = await db.from(TABLA_NOMBRE).update(payload).eq('id', id);
                 if (error) throw error;
                 alert('Institución actualizada en la base de datos.');
             } else {
-                // INSERT
                 const { error } = await db.from(TABLA_NOMBRE).insert([payload]);
                 if (error) throw error;
                 alert('Nueva institución guardada exitosamente.');
@@ -206,8 +207,8 @@ if (resourceForm) {
     });
 }
 
-// Cargar datos en el formulario para Editar
 function prepararEdicion(id) {
+    if (!esUsuarioAdmin) return;
     const item = datosCompletos.find(d => String(d.id) === String(id));
     if (!item) return;
 
@@ -227,8 +228,8 @@ function prepararEdicion(id) {
     adminModal.style.display = 'flex';
 }
 
-// Eliminar Institución
 async function eliminarInstitucion(id) {
+    if (!esUsuarioAdmin) return alert('No tienes permisos para eliminar.');
     if (!confirm('¿Estás seguro de que deseas eliminar esta institución de la base de datos?')) return;
 
     try {
@@ -250,22 +251,37 @@ function resetResourceForm() {
 
 if (btnCancelEdit) btnCancelEdit.addEventListener('click', resetResourceForm);
 
-// 6. UI Admin general
+// 6. UI Admin y Gestión Visual de Sesión
 async function chequearEstadoAdminUI() {
+    usuarioSesion = await obtenerSesionActual();
     esUsuarioAdmin = await verificarEsAdmin();
     
-    if (esUsuarioAdmin) {
-        if (adminLoginSection) adminLoginSection.style.display = 'none';
-        if (adminPanelSection) adminPanelSection.style.display = 'block';
-        if (openAdminBtn) {
-            openAdminBtn.innerHTML = '⚙️ Admin (Activo)';
-            openAdminBtn.style.backgroundColor = '#065f46';
+    if (usuarioSesion) {
+        const userEmail = usuarioSesion.user?.email || 'Usuario';
+        
+        if (esUsuarioAdmin) {
+            // CASO 1: Es Administrador -> Acceso a formulario y panel completo
+            if (adminLoginSection) adminLoginSection.style.display = 'none';
+            if (adminPanelSection) adminPanelSection.style.display = 'block';
+            if (openAdminBtn) {
+                openAdminBtn.innerHTML = '⚙️ Admin (Activo)';
+                openAdminBtn.style.backgroundColor = '#065f46';
+            }
+        } else {
+            // CASO 2: Es Usuario Común (Registrado sin rol admin) -> No ve formulario ni botones de edición
+            if (adminLoginSection) adminLoginSection.style.display = 'none';
+            if (adminPanelSection) adminPanelSection.style.display = 'none';
+            if (openAdminBtn) {
+                openAdminBtn.innerHTML = `👤 Sesión iniciada: ${userEmail}`;
+                openAdminBtn.style.backgroundColor = '#475569'; // Color azul grisáceo neutro
+            }
         }
     } else {
+        // CASO 3: Sin sesión (Visitante Anónimo)
         if (adminLoginSection) adminLoginSection.style.display = 'block';
         if (adminPanelSection) adminPanelSection.style.display = 'none';
         if (openAdminBtn) {
-            openAdminBtn.innerHTML = '⚙️ Admin';
+            openAdminBtn.innerHTML = '⚙️ Acceso Admin';
             openAdminBtn.style.backgroundColor = '#047857';
         }
     }
@@ -324,7 +340,17 @@ if (btnClearFilters) {
 if (openAdminBtn && closeAdminBtn && adminModal) {
     openAdminBtn.addEventListener('click', async () => {
         await chequearEstadoAdminUI();
-        adminModal.style.display = 'flex';
+        
+        // Solo abre el modal emergente si NO hay usuario o si el usuario ES administrador
+        if (!usuarioSesion || esUsuarioAdmin) {
+            adminModal.style.display = 'flex';
+        } else {
+            // Si es un usuario común logueado, le ofrece cerrar sesión si presiona el botón
+            if (confirm(`Iniciaste sesión como usuario común (${usuarioSesion.user?.email}). ¿Deseas cerrar sesión?`)) {
+                await cerrarSesionAdmin();
+                await cargarDatos();
+            }
+        }
     });
     closeAdminBtn.addEventListener('click', () => {
         resetResourceForm();

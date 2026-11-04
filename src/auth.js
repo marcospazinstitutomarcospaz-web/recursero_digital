@@ -4,11 +4,21 @@
 
 import { db } from './supabase.js';
 
-// Verificar sesión actual de forma robusta
-export async function verificarEsAdmin() {
+// Obtiene la sesión del usuario actual
+export async function obtenerSesionActual() {
     const { data: { session }, error } = await db.auth.getSession();
-    if (error || !session) return false;
-    return !!session.user;
+    if (error || !session) return null;
+    return session;
+}
+
+// Verifica si el usuario actual es específicamente Administrador
+export async function verificarEsAdmin() {
+    const session = await obtenerSesionActual();
+    if (!session || !session.user) return false;
+
+    // Comprueba el rol en app_metadata o user_metadata
+    const rol = session.user.app_metadata?.role || session.user.user_metadata?.role;
+    return rol === 'admin';
 }
 
 // Iniciar sesión
