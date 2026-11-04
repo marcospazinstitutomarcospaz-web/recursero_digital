@@ -133,19 +133,18 @@ function renderizarResultados(lista) {
 }
 
 // 5. Control del estado visual según si hay sesión iniciada
+// Control del estado visual según si hay sesión iniciada
 async function chequearEstadoAdminUI() {
     const esAdmin = await verificarEsAdmin();
     
     if (esAdmin) {
-        // Si está logueado: mostramos el panel de edición y cambiamos el botón flotante
         if (adminLoginSection) adminLoginSection.style.display = 'none';
         if (adminPanelSection) adminPanelSection.style.display = 'block';
         if (openAdminBtn) {
-            openAdminBtn.innerHTML = '⚙️ Admin (Sesión Activa)';
-            openAdminBtn.style.backgroundColor = '#065f46'; // Verde más oscuro indicando sesión activa
+            openAdminBtn.innerHTML = '⚙️ Admin (Activo)';
+            openAdminBtn.style.backgroundColor = '#065f46'; // Verde oscuro
         }
     } else {
-        // Si NO está logueado: mostramos el formulario de login en el modal
         if (adminLoginSection) adminLoginSection.style.display = 'block';
         if (adminPanelSection) adminPanelSection.style.display = 'none';
         if (openAdminBtn) {
