@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrador - Guía Marcos Paz 2026</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Librería oficial de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="display: flex; flex-direction: column; min-height: 100vh;">
+
+    <header>
+        <span class="badge-regional">Jefatura Distrital & Región 10 — Marcos Paz</span>
+        <h1>Acceso de Administración</h1>
+        <p>Panel de autenticación y gestión de la Guía de Recursos Socio-Comunitarios.</p>
+    </header>
+
+    <main style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem;">
+        
+        <!-- Tarjeta de Login que respeta el diseño de filter-card y resource-card -->
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); width: 100%; max-width: 420px; padding: 2rem;">
+            
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="background: #e0f2fe; color: #0369a1; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto; font-size: 1.25rem;">
+                    🔒
+                </div>
+                <h2 style="font-size: 1.25rem; font-weight: bold; color: #1e293b; margin: 0;">Iniciar Sesión</h2>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">Ingresa con tus credenciales de administrador</p>
+            </div>
+
+            <!-- Formulario de Autenticación -->
+            <form id="standaloneLoginForm">
+                <div style="margin-bottom: 1.25rem;">
+                    <label for="loginEmail" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@ejemplo.com" style="width: 100%; padding: 0.65rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: border-color 0.2s;">
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <label for="loginPassword" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem;">Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" style="width: 100%; padding: 0.65rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: border-color 0.2s;">
+                </div>
+
+                <!-- Mensaje de error dinámico -->
+                <div id="loginErrorMessage" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1.25rem; text-align: center;">
+                    Credenciales incorrectas o usuario no registrado.
+                </div>
+
+                <button type="submit" style="width: 100%; background: #047857; color: white; border: none; padding: 0.75rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s;">
+                    Ingresar al Panel
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
+                <a href="index.html" style="color: #64748b; font-size: 0.85rem; text-decoration: none; font-weight: 500;">
+                    ← Volver a la Guía Pública
+                </a>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer>
+        <p>Centro de Orientación Familiar (COF) Marcos Paz — Año 2026</p>
+        <p style="font-size: 0.8rem; margin-top: 0.25rem;">Plataforma interactiva para la comunidad, equipos docentes y Jefatura Distrital.</p>
+    </footer>
+
+    <!-- Script de autenticación modular -->
+    <script type="module">
+        import { iniciarSesionAdmin } from './src/auth.js';
+
+        const loginForm = document.getElementById('standaloneLoginForm');
+        const errorMessage = document.getElementById('loginErrorMessage');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                errorMessage.style.display = 'none';
+                await iniciarSesionAdmin(email, password);
+                
+                // Redirigir al inicio una vez autenticado
+                alert('¡Sesión iniciada con éxito!');
+                window.location.href = 'index.html';
+            } catch (err) {
+                console.error('Error al iniciar sesión:', err);
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Error: Credenciales inválidas o usuario no registrado.';
+            }
+        });
+    </script>
+</body>
+</html>
