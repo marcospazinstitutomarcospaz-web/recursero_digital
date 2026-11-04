@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guía de Recursos Socio-Comunitarios - Marcos Paz 2026</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Librería oficial de Supabase cargada globalmente -->
+    <!-- Librería oficial de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -106,16 +106,16 @@
     </button>
 
     <!-- Ventana Modal de Administración -->
-    <div id="adminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 450px; width: 90%; position: relative;">
+    <div id="adminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 520px; width: 90%; position: relative; margin: 2rem auto; max-height: 90vh; overflow-y: auto;">
             <button id="closeAdminBtn" style="position: absolute; top: 10px; right: 15px; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
 
-            <!-- Login Admin -->
+            <!-- 1. Formulario de Login Admin -->
             <div id="adminLoginSection">
                 <h3 style="margin-bottom: 1rem; color: #047857;">Acceso Administrador</h3>
                 <form id="adminLoginForm">
                     <div style="margin-bottom: 1rem;">
-                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Usuario:</label>
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Usuario / Email:</label>
                         <input type="text" id="adminUser" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
                     </div>
                     <div style="margin-bottom: 1rem;">
@@ -127,31 +127,83 @@
                 </form>
             </div>
 
-            <!-- Panel Admin -->
+            <!-- 2. Panel Admin (Gestión exclusiva de la Base de Datos) -->
             <div id="adminPanelSection" style="display: none;">
-                <h3 style="margin-bottom: 1rem; color: #047857;">Editar Textos Principales</h3>
-                <form id="adminEditForm">
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Título Principal:</label>
-                        <input type="text" id="editTitle" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
+                <h3 id="resourceFormTitle" style="margin-bottom: 1rem; color: #047857;">Agregar Nueva Institución</h3>
+                
+                <form id="resourceForm">
+                    <input type="hidden" id="resId">
+                    
+                    <div style="margin-bottom: 0.8rem;">
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Nombre de la Institución:</label>
+                        <input type="text" id="resNombre" required placeholder="ej: Jardín de Infantes N° 905" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Subtítulo:</label>
-                        <textarea id="editSubtitle" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;" rows="3"></textarea>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.8rem;">
+                        <div>
+                            <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Sección:</label>
+                            <input type="text" id="resSeccion" placeholder="ej: Educación" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Tipo de Institución:</label>
+                            <input type="text" id="resTipo" placeholder="ej: Inicial" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+                        </div>
                     </div>
-                    <button type="submit" style="background: #047857; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%; margin-bottom: 0.5rem;">Guardar Cambios</button>
-                    <button type="button" id="adminLogoutBtn" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%;">Cerrar Sesión</button>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.8rem;">
+                        <div>
+                            <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Gestión:</label>
+                            <select id="resGestion" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+                                <option value="Estatal">Estatal</option>
+                                <option value="Privada">Privada</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Teléfono:</label>
+                            <input type="text" id="resTelefono" placeholder="ej: 0220-477-XXXX" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 0.8rem;">
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Dirección:</label>
+                        <input type="text" id="resDireccion" placeholder="ej: Av. Libertad 1234" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+
+                    <div style="margin-bottom: 0.8rem;">
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Responsable / Director/a:</label>
+                        <input type="text" id="resResponsable" placeholder="ej: María González" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+
+                    <div style="margin-bottom: 1.2rem;">
+                        <label style="display:block; font-size:0.85rem; margin-bottom:0.2rem; font-weight:600;">Detalles adicionales:</label>
+                        <textarea id="resDetalles" rows="2" placeholder="Información sobre turnos, horarios, etc." style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;"></textarea>
+                    </div>
+
+                    <button type="submit" id="btnSaveResource" style="background: #047857; color: white; border: none; padding: 0.7rem; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 0.5rem;">
+                        Guardar Institución
+                    </button>
+                    
+                    <button type="button" id="btnCancelEdit" style="display: none; background: #64748b; color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer; width: 100%; margin-bottom: 0.5rem;">
+                        Cancelar Edición
+                    </button>
                 </form>
+
+                <div style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+                    <button type="button" id="adminLogoutBtn" style="background: #dc2626; color: white; border: none; padding: 0.6rem; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%;">
+                        Cerrar Sesión
+                    </button>
+                </div>
             </div>
+
         </div>
     </div>
 
     <footer>
-        <p>Centro de Orientación Familiar (COF) Marcos Paz — Año 2026[cite: 1]</p>
+        <p>Centro de Orientación Familiar (COF) Marcos Paz — Año 2026</p>
         <p style="font-size: 0.8rem; margin-top: 0.25rem;">Plataforma interactiva para la comunidad, equipos docentes y Jefatura Distrital.</p>
     </footer>
 
-    <!-- Cargamos el script principal como módulo para aislar la lógica -->
+    <!-- Archivo JS modular -->
     <script type="module" src="src/main.js"></script>
 </body>
 </html>
