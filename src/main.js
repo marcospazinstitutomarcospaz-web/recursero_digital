@@ -1,13 +1,14 @@
 // ============================================================================
-// LÓGICA PRINCIPAL (SRC/MAIN.JS) - BUSCADOR Y FILTROS DINÁMICOS
+// LÓGICA PRINCIPAL (SRC/MAIN.JS) - BUSCADOR, FILTROS Y ESTADO DE ADMIN
 // ============================================================================
 
 import { db } from './supabase.js';
+import { verificarEsAdmin, iniciarSesionAdmin, cerrarSesionAdmin } from './auth.js';
 
 const TABLA_NOMBRE = 'instituciones_recursos';
 let datosCompletos = [];
 
-// Selección de elementos del DOM
+// Elementos del DOM
 const searchInput = document.getElementById('searchInput');
 const selectSeccion = document.getElementById('filterSeccion');
 const selectTipo = document.getElementById('filterTipo');
@@ -20,8 +21,13 @@ const cardsContainer = document.getElementById('cardsContainer');
 const openAdminBtn = document.getElementById('openAdminBtn');
 const closeAdminBtn = document.getElementById('closeAdminBtn');
 const adminModal = document.getElementById('adminModal');
+const adminLoginSection = document.getElementById('adminLoginSection');
+const adminPanelSection = document.getElementById('adminPanelSection');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLoginError = document.getElementById('adminLoginError');
+const adminLogoutBtn = document.getElementById('adminLogoutBtn');
 
-// 1. Cargar datos iniciales desde Supabase
+// 1. Cargar datos iniciales
 async function cargarDatos() {
     try {
         if (!resultsCount || !cardsContainer) return;
@@ -35,24 +41,22 @@ async function cargarDatos() {
         datosCompletos = data || [];
         poblarSelects(datosCompletos);
         filtrarYRenderizar();
+        await chequearEstadoAdminUI();
     } catch (err) {
         console.error('Error al consultar Supabase:', err);
-        if (resultsCount) {
-            resultsCount.textContent = 'Error al cargar los datos desde el servidor.';
-        }
+        if (resultsCount) resultsCount.textContent = 'Error al cargar los datos desde el servidor.';
         if (cardsContainer) {
             cardsContainer.innerHTML = `<p style="color: #dc2626; text-align: center; grid-column: 1 / -1; font-weight: 500; padding: 2rem;">⚠️ Ocurrió un error: ${err.message}</p>`;
         }
     }
 }
 
-// 2. Poblar selectores de forma dinámica según datos reales
+// 2. Poblar selectores de forma dinámica
 function poblarSelects(data) {
     if (!selectSeccion || !selectTipo || !selectGestion) return;
 
     const secciones = [...new Set(data.map(item => item.seccion).filter(Boolean))].sort();
     const tipos = [...new Set(data.map(item => item.tipo_institucion).filter(Boolean))].sort();
-    
     const gestiones = [...new Set(data.map(item => item.gestion).filter(Boolean))]
         .filter(g => !g.includes('-') && !/\d/.test(g))
         .sort();
@@ -67,7 +71,7 @@ function poblarSelects(data) {
         gestiones.map(g => `<option value="${g}">${g}</option>`).join('');
 }
 
-// 3. Aplicar filtros combinados y búsqueda general
+// 3. Filtrar y Renderizar
 function filtrarYRenderizar() {
     const texto = searchInput ? searchInput.value.toLowerCase().trim() : '';
     const seccionSel = selectSeccion ? selectSeccion.value : '';
@@ -91,7 +95,7 @@ function filtrarYRenderizar() {
     renderizarResultados(filtrados);
 }
 
-// 4. Renderizar tarjetas en el contenedor
+// 4. Renderizar tarjetas
 function renderizarResultados(lista) {
     if (!cardsContainer || !resultsCount) return;
 
@@ -128,7 +132,66 @@ function renderizarResultados(lista) {
     });
 }
 
-// Event Listeners
+// 5. Control del estado visual según si hay sesión iniciada
+async function chequearEstadoAdminUI() {
+    const esAdmin = await verificarEsAdmin();
+    
+    if (esAdmin) {
+        // Si está logueado: mostramos el panel de edición y cambiamos el botón flotante
+        if (adminLoginSection) adminLoginSection.style.display = 'none';
+        if (adminPanelSection) adminPanelSection.style.display = 'block';
+        if (openAdminBtn) {
+            openAdminBtn.innerHTML = '⚙️ Admin (Sesión Activa)';
+            openAdminBtn.style.backgroundColor = '#065f46'; // Verde más oscuro indicando sesión activa
+        }
+    } else {
+        // Si NO está logueado: mostramos el formulario de login en el modal
+        if (adminLoginSection) adminLoginSection.style.display = 'block';
+        if (adminPanelSection) adminPanelSection.style.display = 'none';
+        if (openAdminBtn) {
+            openAdminBtn.innerHTML = '⚙️ Admin';
+            openAdminBtn.style.backgroundColor = '#047857';
+        }
+    }
+}
+
+// Evento Login desde el Modal
+if (adminLoginForm) {
+    adminLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('adminUser').value.trim();
+        const password = document.getElementById('adminPass').value;
+
+        try {
+            await iniciarSesionAdmin(email, password);
+            if (adminLoginError) adminLoginError.style.display = 'none';
+            adminLoginForm.reset();
+            await chequearEstadoAdminUI();
+            alert('¡Sesión iniciada con éxito como Administrador!');
+        } catch (err) {
+            if (adminLoginError) {
+                adminLoginError.style.display = 'block';
+                adminLoginError.textContent = 'Credenciales inválidas o usuario no registrado.';
+            }
+        }
+    });
+}
+
+// Evento Logout
+if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener('click', async () => {
+        try {
+            await cerrarSesionAdmin();
+            await chequearEstadoAdminUI();
+            alert('Sesión cerrada correctamente.');
+            if (adminModal) adminModal.style.display = 'none';
+        } catch (err) {
+            console.error('Error al cerrar sesión:', err);
+        }
+    });
+}
+
+// Listeners Filtros
 if (searchInput) searchInput.addEventListener('input', filtrarYRenderizar);
 if (selectSeccion) selectSeccion.addEventListener('change', filtrarYRenderizar);
 if (selectTipo) selectTipo.addEventListener('change', filtrarYRenderizar);
@@ -144,11 +207,14 @@ if (btnClearFilters) {
     });
 }
 
-// Modal Admin
+// Modal Admin Open/Close
 if (openAdminBtn && closeAdminBtn && adminModal) {
-    openAdminBtn.addEventListener('click', () => adminModal.style.display = 'flex');
+    openAdminBtn.addEventListener('click', async () => {
+        await chequearEstadoAdminUI();
+        adminModal.style.display = 'flex';
+    });
     closeAdminBtn.addEventListener('click', () => adminModal.style.display = 'none');
 }
 
-// Iniciar aplicación
+// Inicialización
 cargarDatos();
