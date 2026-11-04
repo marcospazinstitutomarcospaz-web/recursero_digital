@@ -21,7 +21,7 @@
         <section class="home-hero-gallery" style="margin-bottom: 2.5rem;">
             <h2>Instituciones y Espacios Destacados del Distrito</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                
+
                 <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
                     <div style="height: 180px; overflow: hidden; background: #ffffff; display: flex; align-items: center; justify-content: center; padding: 0.5rem;">
                         <img src="https://ymnaukmdoapukiuelfux.supabase.co/storage/v1/object/public/Imagenes_pagina/cof_m_paz.jpeg" alt="Institución Marcos Paz" style="max-width: 100%; max-height: 100%; object-fit: contain;">
@@ -58,44 +58,28 @@
         <!-- Panel de Filtros -->
         <section class="filter-card">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Buscar por institución, barrio, calle o palabra clave...">
+                <input type="text" id="searchInput" placeholder="Buscar por institución, dirección, responsable o palabra clave...">
             </div>
 
             <div class="filter-grid">
                 <div class="filter-group">
-                    <label for="filterRubro">Rubro / Categoría</label>
-                    <select id="filterRubro">
-                        <option value="Todos">Todos los rubros</option>
-                        <option value="Educación">Educación</option>
-                        <option value="Salud">Salud</option>
-                        <option value="Socio-comunitario">Socio-comunitario</option>
-                        <option value="Artística y Cultura">Artística y Cultura</option>
-                        <option value="Justicia y Seguridad">Justicia y Seguridad</option>
+                    <label for="filterSeccion">Sección</label>
+                    <select id="filterSeccion">
+                        <option value="">Todas las secciones</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="filterComuna">Comuna / Zona</label>
-                    <select id="filterComuna">
-                        <option value="Todas">Todas las zonas</option>
-                        <option value="Comuna 1">Comuna 1 (Casco Urbano)</option>
-                        <option value="Comuna 2">Comuna 2</option>
-                        <option value="Comuna 3">Comuna 3</option>
-                        <option value="Comuna 4">Comuna 4</option>
-                        <option value="Comuna 5">Comuna 5</option>
-                        <option value="Comuna 6">Comuna 6</option>
-                        <option value="Comuna 7">Comuna 7</option>
-                        <option value="Comuna 8">Comuna 8</option>
-                        <option value="Zona Rural">Zona Rural</option>
+                    <label for="filterTipo">Tipo de Institución</label>
+                    <select id="filterTipo">
+                        <option value="">Todos los tipos</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
                     <label for="filterGestion">Gestión</label>
                     <select id="filterGestion">
-                        <option value="Todas">Todas</option>
-                        <option value="Estatal">Estatal / Pública</option>
-                        <option value="Privada">Privada</option>
+                        <option value="">Todas</option>
                     </select>
                 </div>
             </div>
@@ -125,49 +109,11 @@
     <div id="adminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
         <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 450px; width: 90%; position: relative;">
             <button id="closeAdminBtn" style="position: absolute; top: 10px; right: 15px; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-            
+
             <!-- Login Admin -->
             <div id="adminLoginSection">
                 <h3 style="margin-bottom: 1rem; color: #047857;">Acceso Administrador</h3>
                 <form id="adminLoginForm">
                     <div style="margin-bottom: 1rem;">
                         <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Usuario:</label>
-                        <input type="text" id="adminUser" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Contraseña:</label>
-                        <input type="password" id="adminPass" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
-                    </div>
-                    <p id="adminLoginError" style="color: red; display: none; font-size: 0.85rem; margin-bottom: 1rem;">Usuario o contraseña incorrectos.</p>
-                    <button type="submit" style="background: #047857; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%;">Ingresar</button>
-                </form>
-            </div>
-
-            <!-- Panel Admin -->
-            <div id="adminPanelSection" style="display: none;">
-                <h3 style="margin-bottom: 1rem; color: #047857;">Editar Textos Principales</h3>
-                <form id="adminEditForm">
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Título Principal:</label>
-                        <input type="text" id="editTitle" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px;">
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Subtítulo:</label>
-                        <textarea id="editSubtitle" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; rows: 3;"></textarea>
-                    </div>
-                    <button type="submit" style="background: #047857; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%; margin-bottom: 0.5rem;">Guardar Cambios</button>
-                    <button type="button" id="adminLogoutBtn" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 6px; cursor: pointer; width: 100%;">Cerrar Sesión</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <footer>
-        <p>Centro de Orientación Familiar (COF) Marcos Paz — Año 2026[cite: 1]</p>
-        <p style="font-size: 0.8rem; margin-top: 0.25rem;">Plataforma interactiva para la comunidad, equipos docentes y Jefatura Distrital.</p>
-    </footer>
-
-    <!-- Archivo JavaScript principal -->
-    <script src="script.js"></script>
-</body>
-</html>
+                        <input type="text" id="adminUser" required style="width: 100%; padding: 0.5rem; border: 1px solid
